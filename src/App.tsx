@@ -15,15 +15,19 @@ function App() {
         isValid: Validity
     }
 
-    const [data, updateData] = useState(
+    const [history, setHistory] = useState([
         [2, 2, 0, 0,
             0, 0, 0, 0,
             0, 0, 0, 0,
-            0, 0, 0, 0] as Data)
+            0, 0, 0, 0]
+    ] as History)
+    const [table, setTable] = useState(
+        getTableElement(history[0])
+    )
 
 
     function getScore(): number {
-        return data.reduce((accumulator, currentValue) => accumulator + currentValue)
+        return history[0].reduce((accumulator, currentValue) => accumulator + currentValue)
     }
 
 
@@ -87,21 +91,40 @@ function App() {
             if (["w", "a", "s", "d"].includes(e.key)) {
                 console.log(e.key)
                 const func = mergeFuncList[e.key]
-                const state = randomNewNumber(merge(data, func.prevPos, func.curPos, func.isValid))
-                updateData(state)
+                setHistory(prev =>
+                    [randomNewNumber(merge(prev[0].concat(), func.prevPos, func.curPos, func.isValid)), ...prev]
+                )
             } else if (e.key === "u") {
-                console.log(data)
+                setHistory(prev => {
+                    console.log("Reverting", prev)
+                    return prev.length > 1 ? [...prev.slice(1)] : prev
+                })
             }
         }
 
         window.addEventListener("keypress", onKeyPress)
 
         return () => window.removeEventListener("keypress", onKeyPress)
-    }, [data])
+    }, [])
 
-    function rawElements(beginIndex: number, endIndex: number) {
-        return data.map((v, index) => <td key={index}><Block value={v}/></td>)
+    useEffect(
+        () => {
+            setTable(prev => getTableElement(history[0]))
+        }, [history]
+    )
+
+    function getLineElement(raw: Data, beginIndex: number, endIndex: number) {
+        return raw.map((v, index) => <td key={index}><Block value={v}/></td>)
             .filter((v, index) => index >= beginIndex && index < endIndex)
+    }
+
+    function getTableElement(raw: Data) {
+        return <tbody>
+        <tr>{getLineElement(raw, 0, 4)}</tr>
+        <tr>{getLineElement(raw, 4, 8)}</tr>
+        <tr>{getLineElement(raw, 8, 12)}</tr>
+        <tr>{getLineElement(raw, 12, 16)}</tr>
+        </tbody>
     }
 
     return (
@@ -110,14 +133,8 @@ function App() {
             <Timer/>
             <div className="Score">Score:{getScore()}</div>
             <table className="Game">
-                <tbody>
-                    <tr>{rawElements(0, 4)}</tr>
-                    <tr>{rawElements(4, 8)}</tr>
-                    <tr>{rawElements(8, 12)}</tr>
-                    <tr>{rawElements(12, 16)}</tr>
-                </tbody>
+                {table}
             </table>
-
         </div>
     );
 }
