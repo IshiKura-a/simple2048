@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import './App.css';
 import Block from "./Block";
 import Timer from "./Timer";
@@ -83,17 +83,21 @@ function App() {
             return state
         }
 
-        window.addEventListener("keypress", (e: any) => {
+        function onKeyPress(e: KeyboardEvent) {
             if (["w", "a", "s", "d"].includes(e.key)) {
                 console.log(e.key)
                 const func = mergeFuncList[e.key]
-                const state = randomNewNumber(merge(data.concat(), func.prevPos, func.curPos, func.isValid).concat())
+                const state = randomNewNumber(merge(data, func.prevPos, func.curPos, func.isValid))
                 updateData(state)
             } else if (e.key === "u") {
                 console.log(data)
             }
-        })
-    }, [])
+        }
+
+        window.addEventListener("keypress", onKeyPress)
+
+        return () => window.removeEventListener("keypress", onKeyPress)
+    }, [data])
 
     function rawElements(beginIndex: number, endIndex: number) {
         return data.map((v, index) => <td key={index}><Block value={v}/></td>)
@@ -106,10 +110,12 @@ function App() {
             <Timer/>
             <div className="Score">Score:{getScore()}</div>
             <table className="Game">
-                <tr>{rawElements(0, 4)}</tr>
-                <tr>{rawElements(4, 8)}</tr>
-                <tr>{rawElements(8, 12)}</tr>
-                <tr>{rawElements(12, 16)}</tr>
+                <tbody>
+                    <tr>{rawElements(0, 4)}</tr>
+                    <tr>{rawElements(4, 8)}</tr>
+                    <tr>{rawElements(8, 12)}</tr>
+                    <tr>{rawElements(12, 16)}</tr>
+                </tbody>
             </table>
 
         </div>
